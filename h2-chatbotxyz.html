@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+    <title>Hy-Bot: Your H₂ Expert</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- MathJax Configuration and Script -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            options: {
+                enableMenu: false
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        /* RESET & BASE STYLES */
+        * { box-sizing: border-box; }
+        html, body {
+            height: 100%;
+            height: 100dvh; 
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; 
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+        }
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* CHAT CONTAINER */
+        .chat-container {
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            
+            width: 95%;
+            max-width: 750px;
+            height: 92vh;
+            max-height: 1000px;
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(128, 55, 183, 0.15);
+            border: 1px solid rgba(128, 55, 183, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 640px) {
+            .chat-container {
+                width: 100%;
+                height: 100dvh; 
+                max-width: none;
+                max-height: none;
+                border-radius: 0; 
+                border: none;
+                box-shadow: none;
+            }
+        }
+
+        /* HEADER */
+        .chat-header {
+            background-color: #8037B7;
+            color: white;
+            padding: 0.8rem;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-shrink: 0; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 20;
+        }
+
+        /* LOGO */
+        .h2-logo-container {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .h2-logo-container svg { width: 100%; height: 100%; overflow: visible; }
+        .h2-logo-container .h-main { fill: white; transform: scale(0.8); transform-origin: center; }
+        .h2-logo-container .two-subscript { fill: white; font-family: 'Inter', sans-serif; font-weight: 900; font-size: 5px; }
+
+        /* MESSAGES AREA */
+        .chat-messages {
+            flex-grow: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            background-color: #ffffff;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch; 
+            position: relative;
+        }
+        .chat-messages::-webkit-scrollbar { display: none; }
+        .chat-messages { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* BUBBLES */
+        .message-bubble {
+            max-width: 90%;
+            padding: 1rem 1.4rem;
+            border-radius: 1.25rem;
+            word-wrap: break-word;
+            line-height: 1.6;
+            position: relative;
+            font-size: 0.95rem;
+            color: #1e293b;
+        }
+        .user-message {
+            background-color: #EBE1F3;
+            align-self: flex-end;
+            border-bottom-right-radius: 0.25rem;
+        }
+        .bot-message {
+            background-color: #f8fafc;
+            align-self: flex-start;
+            border-bottom-left-radius: 0.25rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* TEXT FORMATTING */
+        .bot-message h3 { font-size: 1.1rem; font-weight: 700; color: #8037B7; margin-top: 1rem; margin-bottom: 0.5rem; display: block; }
+        .bot-message h4 { background-color: #fcfaff; border: 1px solid #e9d5ff; border-left: 4px solid #8037B7; padding: 0.75rem; border-radius: 0.5rem; font-weight: 600; color: #4c1d95; margin-top: 1rem; margin-bottom: 0.5rem; display: block; }
+        .bot-message p { margin-bottom: 0.5rem; }
+        .bot-message strong { color: #8037B7; font-weight: 700; }
+        .bot-message a { color: #8037B7; font-weight: 600; text-decoration: none; }
+        .bot-message a:hover { text-decoration: underline; }
+        .bot-message ul { margin: 0.5rem 0; padding-left: 0.5rem; }
+        .bot-message li { position: relative; margin-bottom: 0.5rem; list-style: none; padding-left: 1.6rem; text-align: left; }
+        .bot-message li::before { content: '✓'; position: absolute; left: 0; color: #22c55e; font-weight: 800; font-size: 0.9rem; }
+
+        /* SUGGESTION CHIPS */
+        .suggestions-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 0.5rem;
+            margin-left: 0.5rem;
+            align-self: flex-start;
+            max-width: 90%;
+            padding-bottom: 0.5rem;
+            animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .suggestion-chip {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #d8b4fe;
+            padding: 0.4rem 0.8rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .suggestion-chip:hover {
+            background-color: #8037B7;
+            color: white;
+            border-color: #8037B7;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(128, 55, 183, 0.25);
+        }
+
+        /* WELCOME GLOW */
+        @keyframes radiant-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(128, 55, 183, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(128, 55, 183, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(128, 55, 183, 0); }
+        }
+        .welcome-message-glowing-outline { border: 2px solid transparent; animation: radiant-pulse 2.5s infinite alternate; }
+        .light-underline { border-bottom: 1px solid rgba(128, 55, 183, 0.3); display: inline-block; line-height: 1.1; }
+
+        /* INPUT AREA */
+        .chat-input-area {
+            display: flex;
+            flex-direction: column;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid #e2e8f0;
+            background-color: #ffffff;
+            flex-shrink: 0; 
+            gap: 0.5rem;
+            z-index: 20;
+        }
+        .input-wrapper { display: flex; gap: 10px; align-items: center; width: 100%; position: relative; }
+        
+        .chat-input {
+            flex-grow: 1;
+            padding: 0.9rem 1.5rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 9999px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s;
+            -webkit-appearance: none; 
+        }
+        .chat-input:focus { border-color: #8037B7; box-shadow: 0 0 0 4px rgba(128, 55, 183, 0.1); }
+        
+        .send-button {
+            background-color: #8037B7;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            cursor: pointer;
+            border: none;
+            transition: transform 0.1s;
+        }
+        .send-button:active { transform: scale(0.95); }
+        .send-button:disabled { background-color: #e2e8f0; cursor: not-allowed; }
+
+        .chat-footer { text-align: center; font-size: 0.75rem; color: #94a3b8; margin-top: 0.25rem; }
+        .chat-footer a { color: #8037B7; font-weight: 600; text-decoration: none; }
+        .chat-footer a:hover { text-decoration: underline; }
+
+        /* SCROLL BUTTON */
+        .scroll-down-btn {
+            position: absolute;
+            bottom: 7rem; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            width: 32px; 
+            height: 32px; 
+            background-color: rgba(128, 55, 183, 0.15); 
+            color: #8037B7; 
+            border: 1px solid rgba(128, 55, 183, 0.3); 
+            backdrop-filter: blur(4px); 
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 30;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            animation: bounce-center 2s infinite;
+        }
+        .scroll-down-btn.visible { opacity: 1; visibility: visible; }
+        @keyframes bounce-center {
+            0%, 20%, 50%, 80%, 100% {transform: translate(-50%, 0);}
+            40% {transform: translate(-50%, -5px);}
+            60% {transform: translate(-50%, -3px);}
+        }
+        
+        /* Source Citation Box */
+        .sources-section {
+            margin-top: 1rem;
+            padding: 0.8rem;
+            border: 1px solid #e9d5ff;
+            background-color: #fcfaff;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+        }
+        .sources-title { font-weight: 700; color: #8037B7; margin-bottom: 0.5rem; display: block; }
+        .source-link { display: block; color: #4c1d95; text-decoration: none; margin-bottom: 0.3rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .source-link:hover { text-decoration: underline; }
+
+        /* MOBILE ADJUSTMENTS */
+        @media (max-width: 640px) {
+            .scroll-down-btn {
+                bottom: 8.5rem; 
+                right: 1.5rem;
+            }
+            .chat-input-area { padding: 1rem; }
+            .message-bubble { max-width: 92%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <header class="chat-header">
+            <div class="h2-logo-container">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#A067C9;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#6B2A99;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <circle cx="12" cy="12" r="11" fill="url(#purpleGrad)"/>
+                    <path class="h-main" d="M 8 7 V 17 H 10 V 13 H 14 V 17 H 16 V 7 H 14 V 11 H 10 V 7 Z" />
+                    <text class="two-subscript" x="16.5" y="17" text-anchor="middle" alignment-baseline="central">2</text>
+                </svg>
+            </div>
+            <h1>Hy-Bot: Your H₂ Expert</h1>
+        </header>
+        
+        <div id="chat-messages" class="chat-messages">
+            <div class="message-bubble bot-message welcome-message-glowing-outline">
+                <p>Hello! I am your <strong>specialized assistant</strong> for <span class="light-underline">Hydrogen and Clean Energy</span>.</p>
+                <ul>
+                    <li>Real-time scanning of academic papers, industry reports, and blogs.</li>
+                </ul>
+                <p>🤔 What specific research, breakthrough, or data point can I find for you today?</p>
+            </div>
+        </div>
+
+        <!-- Scroll Down Button -->
+        <div id="scroll-down-btn" class="scroll-down-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1z"/>
+            </svg>
+        </div>
+
+        <div class="chat-input-area">
+            <div class="input-wrapper">
+                <input type="text" id="user-input" class="chat-input" placeholder="Search research or ask about H2..." aria-label="Chat input">
+                <button id="send-button" class="send-button" aria-label="Send">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576 6.636 10.07Zm6.787-8.201L1.591 6.602l4.339 2.76 7.494-7.493Z"/>
+                    </svg>
+                </button>
+            </div>
+            <footer class="chat-footer">
+                Made by <a href="https://www.dewan-hafiz-nabil.com/" target="_blank"><strong>Nabil</strong></a> | Powered by Gemini & Groq
+            </footer>
+        </div>
+    </div>
+
+    <script type="module">
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const scrollDownBtn = document.getElementById('scroll-down-btn');
+
+        // --- TRIPLE API CONFIG (Obfuscated) ---
+        const g_k1 = "gsk_mc5w8LCYqmT9u7X";
+        const g_k2 = "d4ZzvWGdyb3FYeFU494O1p8vDMPpoSqVy4Waq";
+        const GROQ_KEY = g_k1 + g_k2;
+
+        // Updated Gemini Key (Obfuscated)
+        const gem_k1 = "AIzaSyDgfnHrW00s";
+        const gem_k2 = "ZKNUQd6SrMChSEreaQZNHSU";
+        const GEMINI_KEY = gem_k1 + gem_k2;
+
+        const m_k1 = "JkF5heh0v3yG";
+        const m_k2 = "rQetBnbrDfUrZtYk6aWB";
+        const MISTRAL_KEY = m_k1 + m_k2;
+
+        const apiKeys = {
+            groq: GROQ_KEY,
+            gemini: GEMINI_KEY, 
+            mistral: MISTRAL_KEY
+        };
+
+        const endpoints = {
+            groq: "https://api.groq.com/openai/v1/chat/completions",
+            // UPDATED: Using EXACT Gemini 2.5 Flash Lite
+            gemini: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKeys.gemini}`,
+            mistral: "https://api.mistral.ai/v1/chat/completions"
+        };
+
+        const systemPromptText = `You are a Hydrogen Energy Research Assistant.
+        - Structure your response using '### ' for Main Headings (e.g., ### Overview).
+        - Use '#### ' for Sub-headings that represent key sections or data points (e.g., #### Key Findings).
+        - Use bullet points (*) for lists.
+        - Use bold (**) for emphasis on important terms.
+        - ALWAYS use LaTeX ($...$) for math and chemistry formulas.
+        - Do not use in-text citations.
+        - Be technical, concise, and ensure the text is well-formatted for readability.`;
+
+        let chatHistory = [
+            { role: "system", content: systemPromptText }
+        ];
+
+        // Search Detection Logic
+        function needsSearch(text) {
+            const keywords = ["latest", "current", "news", "price", "stock", "who is", "today", "now", "recent", "update", "2024", "2025", "report from", "research on", "find paper"];
+            return keywords.some(k => text.toLowerCase().includes(k));
+        }
+
+        // Format Helper
+        function formatBotResponse(text) {
+            let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            const lines = formatted.split('\n');
+            let html = '';
+            let inList = false;
+
+            lines.forEach(line => {
+                const trimmed = line.trim();
+                if (trimmed.startsWith('### ')) {
+                     if (inList) { html += '</ul>'; inList = false; }
+                     html += `<h3>${trimmed.substring(4)}</h3>`;
+                } else if (trimmed.startsWith('#### ')) {
+                     if (inList) { html += '</ul>'; inList = false; }
+                     html += `<h4>${trimmed.substring(5)}</h4>`;
+                } else if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
+                    if (!inList) { html += '<ul>'; inList = true; }
+                    html += `<li>${trimmed.substring(2)}</li>`;
+                } else {
+                    if (inList) { html += '</ul>'; inList = false; }
+                    if (trimmed) html += `<p>${trimmed}</p>`;
+                }
+            });
+            if (inList) html += '</ul>';
+            return html;
+        }
+
+        // Custom Scroll Logic
+        function scrollToMessageTop(element) {
+            const containerTop = chatMessages.getBoundingClientRect().top;
+            const elementTop = element.getBoundingClientRect().top;
+            const currentScroll = chatMessages.scrollTop;
+            
+            chatMessages.scrollTo({
+                top: currentScroll + (elementTop - containerTop) - 20, 
+                behavior: 'smooth'
+            });
+        }
+
+        function scrollToBottom() {
+             chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
+        }
+
+        function checkScroll() {
+            const threshold = 50;
+            const position = chatMessages.scrollTop + chatMessages.clientHeight;
+            const height = chatMessages.scrollHeight;
+            if (height - position > threshold) {
+                scrollDownBtn.classList.add('visible');
+            } else {
+                scrollDownBtn.classList.remove('visible');
+            }
+        }
+        scrollDownBtn.addEventListener('click', scrollToBottom);
+        chatMessages.addEventListener('scroll', checkScroll);
+
+        // Suggestions Generator (Groq)
+        async function generateSuggestions(history) {
+            const recentHistory = history.filter(m => m.role !== 'system').slice(-2);
+            const suggestionPrompt = `Based on the last answer, suggest 3 short, intriguing follow-up questions about hydrogen. Return ONLY a raw JSON array of strings. Example: ["Storage costs?", "Safety?", "Green vs Blue?"]`;
+            
+            try {
+                const response = await fetch(endpoints.groq, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKeys.groq}` },
+                    body: JSON.stringify({
+                        model: "llama-3.3-70b-versatile",
+                        messages: [...recentHistory, { role: "user", content: suggestionPrompt }],
+                        response_format: { type: "json_object" } 
+                    })
+                });
+                
+                if (!response.ok) return;
+
+                const result = await response.json();
+                const text = result.choices[0].message.content;
+                if (text) {
+                    let suggestions;
+                    try {
+                        const parsed = JSON.parse(text);
+                        if (Array.isArray(parsed)) suggestions = parsed;
+                        else if (parsed.questions) suggestions = parsed.questions;
+                        else suggestions = Object.values(parsed)[0];
+                    } catch (e) {
+                         const match = text.match(/\[.*\]/s);
+                         if (match) suggestions = JSON.parse(match[0]);
+                    }
+
+                    if (Array.isArray(suggestions) && suggestions.length > 0) {
+                        const suggestionsContainer = document.createElement('div');
+                        suggestionsContainer.className = 'suggestions-container';
+                        suggestions.forEach(question => {
+                            const chip = document.createElement('button');
+                            chip.className = 'suggestion-chip';
+                            chip.innerHTML = `<span>✨</span> ${question}`;
+                            chip.onclick = () => { userInput.value = question; sendMessage(); };
+                            suggestionsContainer.appendChild(chip);
+                        });
+                        chatMessages.appendChild(suggestionsContainer);
+                    }
+                }
+            } catch (e) { console.error("Suggestion generation failed", e); }
+        }
+
+        // API CALLERS
+        async function callGroq(context) {
+             const response = await fetch(endpoints.groq, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKeys.groq}`
+                },
+                body: JSON.stringify({
+                    model: "llama-3.3-70b-versatile",
+                    messages: context,
+                    temperature: 0.6 
+                })
+            });
+            if (!response.ok) throw new Error("Groq API Error");
+            const result = await response.json();
+            return { text: result.choices[0].message.content, sources: [] };
+        }
+
+        async function callGemini(context) {
+            // Convert to Gemini format
+            const geminiContents = context.map(msg => ({
+                role: msg.role === 'user' ? 'user' : (msg.role === 'system' ? 'user' : 'model'),
+                parts: [{ text: msg.content }]
+            })).filter(m => m.role !== 'system' || m.parts[0].text !== systemPromptText); 
+
+            if (geminiContents.length > 0 && geminiContents[0].role === 'model') geminiContents.shift();
+
+            const response = await fetch(endpoints.gemini, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: geminiContents,
+                    tools: [{ "google_search": {} }] // Enable search
+                })
+            });
+            if (!response.ok) {
+                 const err = await response.json();
+                 throw new Error(`Gemini Error: ${response.status} - ${JSON.stringify(err)}`);
+            }
+            const result = await response.json();
+            const candidate = result.candidates?.[0];
+            const text = candidate?.content?.parts?.[0]?.text;
+            
+            const attributions = candidate?.groundingMetadata?.groundingAttributions || [];
+            const sources = attributions.map(a => ({ uri: a.web?.uri, title: a.web?.title })).filter(s => s.uri);
+
+            return { text, sources };
+        }
+
+        async function callMistral(context) {
+             const response = await fetch(endpoints.mistral, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKeys.mistral}` },
+                body: JSON.stringify({
+                    model: "mistral-small-latest",
+                    messages: context,
+                    temperature: 0.7 
+                })
+            });
+            if (!response.ok) throw new Error(`Mistral: ${response.status}`);
+            const result = await response.json();
+            return { text: result.choices[0].message.content, sources: [] };
+        }
+
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            const isSearchQuery = needsSearch(text);
+
+            const userDiv = document.createElement('div');
+            userDiv.className = 'message-bubble user-message';
+            userDiv.textContent = text;
+            chatMessages.appendChild(userDiv);
+            
+            userInput.value = '';
+            sendButton.disabled = true;
+            scrollToBottom();
+
+            const loading = document.createElement('div');
+            loading.className = 'message-bubble bot-message italic text-slate-400';
+            loading.innerHTML = isSearchQuery ? 'Searching live sources (Gemini)...' : 'Analyzing (Groq)...';
+            chatMessages.appendChild(loading);
+            scrollToBottom();
+
+            chatHistory.push({ role: "user", content: text });
+            
+            // Limit context
+            let contextToSend;
+            const historyWithoutSystem = chatHistory.filter(m => m.role !== 'system');
+            if (historyWithoutSystem.length > 6) {
+                contextToSend = [chatHistory[0], ...historyWithoutSystem.slice(-6)];
+            } else {
+                contextToSend = chatHistory;
+            }
+
+            try {
+                let botResult;
+                
+                // --- 3-LAYER ROUTING LOGIC ---
+                if (isSearchQuery) {
+                    try {
+                        console.log("Routing to Gemini (Search)...");
+                        botResult = await callGemini(contextToSend);
+                    } catch (e) {
+                        console.warn("Gemini failed, trying Groq fallback", e);
+                        try {
+                            botResult = await callGroq(contextToSend);
+                            botResult.text = "**(Note: Live search unavailable, using internal knowledge)**\n\n" + botResult.text;
+                        } catch (e2) {
+                            console.warn("Groq failed, trying Mistral fallback", e2);
+                            botResult = await callMistral(contextToSend);
+                        }
+                    }
+                } else {
+                    try {
+                        console.log("Routing to Groq (Standard)...");
+                        botResult = await callGroq(contextToSend);
+                    } catch (e) {
+                         console.warn("Groq failed, trying Mistral fallback", e);
+                         try {
+                            botResult = await callMistral(contextToSend);
+                         } catch (e2) {
+                             console.warn("Mistral failed, trying Gemini", e2);
+                             botResult = await callGemini(contextToSend); 
+                         }
+                    }
+                }
+
+                if (chatMessages.contains(loading)) chatMessages.removeChild(loading);
+                
+                const botDiv = document.createElement('div');
+                botDiv.className = 'message-bubble bot-message';
+                let contentHtml = formatBotResponse(botResult.text || "No response generated.");
+
+                // Append search sources if any (from Gemini)
+                if (botResult.sources && botResult.sources.length > 0) {
+                    const uniqueSources = Array.from(new Set(botResult.sources.map(s => s.uri))).map(uri => botResult.sources.find(s => s.uri === uri)).slice(0, 4);
+                    contentHtml += `<div class="sources-section"><span class="sources-title">🌐 Search Sources:</span>`;
+                    uniqueSources.forEach(src => {
+                        contentHtml += `<div class="source-item"><a href="${src.uri}" target="_blank" class="source-link" title="${src.title}">${src.title || src.uri}</a></div>`;
+                    });
+                    contentHtml += `</div>`;
+                }
+
+                botDiv.innerHTML = contentHtml;
+                chatMessages.appendChild(botDiv);
+                
+                if (window.MathJax) MathJax.typesetPromise([botDiv]);
+                
+                chatHistory.push({ role: "assistant", content: botResult.text });
+                
+                // IMPORTANT: Scroll to START of the new answer, ONLY inside chatMessages
+                scrollToMessageTop(botDiv);
+                
+                setTimeout(checkScroll, 500);
+                generateSuggestions(chatHistory);
+
+            } catch (error) {
+                console.error("All APIs failed", error);
+                if (chatMessages.contains(loading)) chatMessages.removeChild(loading);
+                const errDiv = document.createElement('div');
+                errDiv.className = 'message-bubble bot-message text-red-500';
+                errDiv.textContent = 'All AI services are currently unavailable. Please try again later.';
+                chatMessages.appendChild(errDiv);
+            } finally {
+                sendButton.disabled = false;
+            }
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+        
+        window.onload = () => {
+             if (window.innerWidth > 640) userInput.focus();
+        };
+    </script>
+</body>
+</html>
