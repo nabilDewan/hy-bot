@@ -59,7 +59,31 @@
             border: 1px solid rgba(128, 55, 183, 0.1);
             transition: all 0.3s ease;
         }
-
+/* Footer Navigation Styling */
+.footer-nav {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+.nav-btn {
+    font-size: 0.7rem;
+    color: #6b21a8; /* Deep Purple text */
+    background-color: #f3e8ff; /* Light Purple bg */
+    padding: 4px 12px;
+    border-radius: 9999px; /* Pill shape */
+    text-decoration: none;
+    font-weight: 600;
+    border: 1px solid #d8b4fe;
+    transition: all 0.2s ease;
+}
+.nav-btn:hover {
+    background-color: #8037B7; /* Theme Purple */
+    color: white;
+    border-color: #8037B7;
+    transform: translateY(-1px);
+}
         @media (max-width: 640px) {
             .chat-container {
                 width: 100%;
@@ -342,9 +366,17 @@
                     </svg>
                 </button>
             </div>
-            <footer class="chat-footer">
-                Made by <a href="https://www.dewan-hafiz-nabil.com/" target="_blank"><strong>Nabil</strong></a> | Powered by Gemini & Groq
-            </footer>
+                <footer class="chat-footer">
+    <div class="mb-2">
+        Made by <a href="https://www.dewan-hafiz-nabil.com/" target="_blank"><strong>Nabil</strong></a> | Powered by Gemini & Groq
+    </div>
+    <div class="footer-nav">
+        <a href="https://www.dewan-hafiz-nabil.com/" target="_blank" class="nav-btn">Home</a>
+        <a href="https://www.dewan-hafiz-nabil.com/25110164-2091-4485-8a9c-9be596dd7b46" target="_blank" class="nav-btn">Research & Projects</a>
+        <a href="https://www.dewan-hafiz-nabil.com/e766c2c57a354ea3891a7ec8d9173276" target="_blank" class="nav-btn">Contact Me</a>
+    </div>
+</footer>
+          
         </div>
     </div>
 
